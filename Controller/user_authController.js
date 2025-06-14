@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-require("dotenv").config(); // if nt already loaded at entry pointconst User = require("../Models/User");
+require("dotenv").config();
 const sendEmail = require("../utils/sendMail");
 const User = require("../Models/User");
 

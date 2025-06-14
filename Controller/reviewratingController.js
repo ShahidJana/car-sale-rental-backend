@@ -4,15 +4,6 @@ exports.createReview = async (req, res) => {
   try {
     const { carId, userId, rating, comment } = req.body;
 
-    // Prevent duplicate review by the same user for the same car
-    // const existing = await Review.findOne({ carId, userId });
-    // if (existing) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "You have already reviewed this car.",
-    //   });
-    // }
-
     const newReview = await new Review({ carId, userId, rating, comment }).save();
 
     const populatedReview = await Review.findById(newReview._id)

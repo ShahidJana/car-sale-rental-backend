@@ -2,128 +2,51 @@ const Rental = require("../Models/rentalModel");
 const User = require("../Models/User");
 const sendEmail = require("../utils/sendMail");
 
-// exports.createRental = async (req, res) => {
-//   try {
-//     const userId = req.body.userId;
-
-//     // Fetch user
-//     const user = await User.findById(userId);
-//     if (!user) {
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "User not found" });
-//     }
-
-//     user.loyaltyCounter = (user.loyaltyCounter || 0) + 1;
-
-//     const rental = new Rental(req.body);
-//     const savedRental = await rental.save();
-
-//     // Extract values
-//     const { name, phoneNo, address } = savedRental;
-//     let message = "Rental created";
-//     let showCongrats = false;
-
-//     if (user.loyaltyCounter >= 5) {
-//       message = "Congratulations! 🎉 You've booked 5 rentals with us!";
-//       showCongrats = true;
-//       user.loyaltyCounter = 0;
-//     }
-
-//     await user.save();
-
-//     const emailBody = (name, email, phoneNo, address, showCongrats) => {
-//       return `
-//       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: auto; padding: 28px; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 10px;">
-//         <h3 style="color: #222; text-align: center; font-size: 18px; margin-bottom: 30px;">
-//           ${
-//             showCongrats
-//               ? "🎉 Congratulations!"
-//               : "New Message from Rental Booking"
-//           }
-//         </h3>
-
-//         ${
-//           showCongrats
-//             ? `<p style="font-size: 14px; color: #333; text-align: center; margin-bottom: 20px;">
-//                 You've successfully completed your 5th rental! We appreciate your loyalty.
-//               </p>`
-//             : ""
-//         }
-
-//         <p style="font-size: 14px; color: #333; margin-bottom: 10px;">Name: ${name}</p>
-//         <p style="font-size: 14px; color: #333; margin-bottom: 10px;">Email: ${
-//           user.email
-//         }</p>
-//         <p style="font-size: 14px; color: #333; margin-bottom: 10px;">Phone: ${phoneNo}</p>
-
-//         <div>
-//           <p style="font-size: 14px; color: #333; margin-bottom: 10px;">Address:</p>
-//           <div style="background-color: #f9f9f9; padding: 18px; border-radius: 6px; color: #444; font-size: 12px; line-height: 1.6;">
-//             ${address}
-//           </div>
-//         </div>
-
-//         <p style="text-align: center; font-size: 12px; color: #999; margin-top: 40px;">
-//           — Sent via <strong>JANADRIVE</strong> Contact Form —
-//         </p>
-//       </div>
-//       `;
-//     };
-
-//     // Send email
-//     await sendEmail(
-//       "janashahid999@gmail.com", // to (admin)
-//       user.email, // from (user)
-//       "New Booking JANADRIVE",
-//       emailBody(name, user.email, phoneNo, address, showCongrats)
-//     );
-
-//     res.status(201).json({ success: true, message, rental: savedRental });
-//   } catch (error) {
-//     res.status(400).json({ success: false, error: error.message });
-//   }
-// };
 exports.createRental = async (req, res) => {
   try {
-    const userId = req.body.userId;
+    let user = null;
+    let showCongrats = false;
+    let message = "Car Booked Successfully";
 
-    // Fetch user
-    const user = await User.findById(userId);
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
+    const { userId, pickupDateTime, dropoffDateTime } = req.body;
+
+    if (userId) {
+      user = await User.findById(userId);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+
+      // Loyalty system
+      user.loyaltyCounter = (user.loyaltyCounter || 0) + 1;
+      if (user.loyaltyCounter >= 5) {
+        message = "Congratulations! 🎉 You've booked 5 rentals with us!";
+        showCongrats = true;
+        user.loyaltyCounter = 0;
+      }
+
+      await user.save();
     }
-
-    user.loyaltyCounter = (user.loyaltyCounter || 0) + 1;
 
     const rental = new Rental(req.body);
     const savedRental = await rental.save();
-    const {
-      name,
-      phoneNo,
-      address,
-      location,
-      pickupDateTime,
-      dropoffDateTime,
-    } = savedRental;
 
-    let message = "Car Booked Successfully";
-    let showCongrats = false;
+    const { name, phoneNo, address, location } = savedRental;
 
-    if (user.loyaltyCounter >= 5) {
-      message = "Congratulations! 🎉 You've booked 5 rentals with us!";
-      showCongrats = true;
-      user.loyaltyCounter = 0;
-    }
-
-    await user.save();
-
-    const pickupDate = pickupDateTime.toLocaleDateString();
-    const pickupTime = pickupDateTime.toLocaleTimeString();
-    const dropoffDate = dropoffDateTime.toLocaleDateString();
-    const dropoffTime = dropoffDateTime.toLocaleTimeString();
+    // Only format pickup/dropoff if both are valid
+    const pickupDate = pickupDateTime
+      ? new Date(pickupDateTime).toLocaleDateString()
+      : "";
+    const pickupTime = pickupDateTime
+      ? new Date(pickupDateTime).toLocaleTimeString()
+      : "";
+    const dropoffDate = dropoffDateTime
+      ? new Date(dropoffDateTime).toLocaleDateString()
+      : "";
+    const dropoffTime = dropoffDateTime
+      ? new Date(dropoffDateTime).toLocaleTimeString()
+      : "";
 
     const emailBody = (
       name,
@@ -175,24 +98,26 @@ exports.createRental = async (req, res) => {
   `;
     };
 
-    // Send email with formatted values
-    await sendEmail(
-      "janashahid999@gmail.com",
-      user.email,
-      "New Booking JANADRIVE",
-      emailBody(
-        name,
+    // Optional email (only if user exists)
+    if (user) {
+      await sendEmail(
+        "janashahid999@gmail.com",
         user.email,
-        phoneNo,
-        address,
-        showCongrats,
-        location,
-        pickupDate,
-        dropoffDate,
-        pickupTime,
-        dropoffTime
-      )
-    );
+        "New Booking JANADRIVE",
+        emailBody(
+          name,
+          user.email,
+          phoneNo,
+          address,
+          showCongrats,
+          location,
+          pickupDate,
+          dropoffDate,
+          pickupTime,
+          dropoffTime
+        )
+      );
+    }
 
     res.status(201).json({ success: true, message, rental: savedRental });
   } catch (error) {
