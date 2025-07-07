@@ -4,12 +4,12 @@ const rentalSchema = new mongoose.Schema(
   {
     carId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Cars", // Should match the model name used for car schema
+      ref: "Cars",
       required: false,
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Users", // Should match the model name used for user schema
+      ref: "Users",
       required: false,
     },
     startDate: {
@@ -27,7 +27,6 @@ const rentalSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: ["pending", "confirmed", "completed", "canceled"],
-      // default: 'pending',
     },
     location: { type: String, required: false },
     pickupDateTime: { type: Date, required: false },
@@ -42,6 +41,6 @@ const rentalSchema = new mongoose.Schema(
   }
 );
 
-const Rental = mongoose.model("Rental", rentalSchema); // Model name should be singular
+const Rental = mongoose.model("Rental", rentalSchema);
 
 module.exports = Rental;

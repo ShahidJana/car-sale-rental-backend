@@ -1,4 +1,3 @@
-// salesController.js
 const Sale = require("../Models/saleModel");
 
 // Create a new sale

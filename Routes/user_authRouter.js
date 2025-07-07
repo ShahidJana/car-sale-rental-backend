@@ -6,7 +6,7 @@ const {
 
 
 const router = require("express").Router();
-// Routes
+
 router.post("/signup", signupValidation, user_authController.signup);
 router.post("/login", loginValidation, user_authController.login);
 router.post("/forgot-password", user_authController.forgotPassword);

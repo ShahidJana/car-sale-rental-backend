@@ -89,7 +89,7 @@ exports.updateCar = async (req, res) => {
             allImages.push(parsed);
           }
         } catch (err) {
-          // If not JSON (e.g., file path), skip
+          
         }
       });
     }

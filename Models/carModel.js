@@ -49,7 +49,6 @@ const carSchema = new mongoose.Schema(
         public_id: { type: String, required: true },
       },
     ],
-    // ratings: { type: Number, default: 0 },
     mileage: { type: Number, required: false },
     fuelType: {
       type: String,
